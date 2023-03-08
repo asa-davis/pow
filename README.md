@@ -1,6 +1,7 @@
 # usage
-1. `cargo run -- encode [input file]`
-2. go ahead and open [input file] with a text editor. you'll notice your old file is gone now
+0. find a file you care about and add it to /data
+1. `cargo run -- encode [your file]`
+2. go ahead and open your file with a text editor. you'll notice your old file is gone now
 3. write down the new contents or print them out
 4. when you want your input file back, download CalTopo
 5. go outside to a large open space
