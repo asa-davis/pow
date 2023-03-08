@@ -5,7 +5,7 @@
 3. write down the new contents or print them out
 4. when you want your input file back, download CalTopo
 5. go outside to a large open space
-6. start tracking yourself on CalTopo and follow the instructions from out.txt
+6. start tracking yourself on CalTopo and follow the instructions you copied from the file
 7. export your map as GeoJSON
 8. `cargo run -- decode whatever.geojson [output file with proper extension]`
 
