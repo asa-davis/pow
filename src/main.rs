@@ -34,13 +34,13 @@ fn main() {
     //testing.byte_diff_finder(&args[2], &args[3]);
     //return;
 
-    if args.len() != 4 || (!args[1].eq("encode") && !args[1].eq("decode")) {
-        println!("\nRequired arguments not found! Please run the program like this:\n\n\tcargo run -- [encode|decode] [input filename] [output filename]\n");
+    if !((args.len() == 3 && args[1].eq("encode")) || (args.len() == 4 && args[1].eq("decode"))) {
+        println!("\nRequired arguments not found! Please run the program like this:\n\tencode:\tcargo run -- encode [input filename]\n\tdecode:\tcargo run -- decode [input filename] [output filename]");
         return;
     }
 
     if args[1].eq("encode") {
-        encode_to_instructions(&args[2], &args[3]);
+        encode_to_instructions(&args[2], &args[2]);
     }
     else {
         decode(&args[2], &args[3]);
@@ -88,6 +88,43 @@ fn normalize_bearing(bear: f64) -> f64 {
     return new_bear;
 }
 
+fn encode_to_instructions(in_file_name: &str, out_file_name: &str) {
+    let deg_to_dir = HashMap::from([
+        (0,   "N"),
+        (45,  "NE"),
+        (90,  "E"),
+        (135, "SE"),
+        (180, "S"),
+        (225, "SW"),
+        (270, "W"),
+        (315, "NW"),
+    ]);
+
+    // load the bytes we wish to encode to instructions
+    let data = get_bytes_from_file(in_file_name);
+
+    let mut instructions: String = String::new();
+
+    // iterate over data, determining distance and bearing for each byte
+    let mut i = 1;
+    let mut total_dist = 0.0;
+    for byte in data {
+        let dist_and_bear = encode_byte_to_dist_and_bear(byte, i);
+        let dist = dist_and_bear.0;
+        let bear = dist_and_bear.1;
+
+        total_dist += dist;
+        i += 1;
+
+        instructions.push_str(&format!("go {}m {} totalling {}m\n", dist, deg_to_dir.get(&(bear.round() as i32)).expect("weird bearing produced oh no!!"), total_dist));
+    }
+
+    println!("encoded {} bytes into lines", i);
+
+    // write the instruction
+    save_string_to_file(out_file_name, instructions);
+}
+
 fn encode_to_map(in_file_name: &str, out_file_name: &str) { 
     // create an empty GeoJSON object to add lines to as we encode the data
     let mut json_out= GeoJSON { 
@@ -133,43 +170,6 @@ fn encode_to_map(in_file_name: &str, out_file_name: &str) {
     // write the geojson file
     let json_str: String = serde_json::to_string(&json_out).expect("Failed to serialized back to GeoJSON!");
     save_string_to_file(out_file_name, json_str);
-}
-
-fn encode_to_instructions(in_file_name: &str, out_file_name: &str) {
-    let deg_to_dir = HashMap::from([
-        (0,   "N"),
-        (45,  "NE"),
-        (90,  "E"),
-        (135, "SE"),
-        (180, "S"),
-        (225, "SW"),
-        (270, "W"),
-        (315, "NW"),
-    ]);
-
-    // load the bytes we wish to encode to instructions
-    let data = get_bytes_from_file(in_file_name);
-
-    let mut instructions: String = String::new();
-
-    // iterate over data, determining distance and bearing for each byte
-    let mut i = 1;
-    let mut total_dist = 0.0;
-    for byte in data {
-        let dist_and_bear = encode_byte_to_dist_and_bear(byte, i);
-        let dist = dist_and_bear.0;
-        let bear = dist_and_bear.1;
-
-        total_dist += dist;
-        i += 1;
-
-        instructions.push_str(&format!("go {}m {} totalling {}m\n", dist, deg_to_dir.get(&(bear.round() as i32)).expect("weird bearing produced oh no!!"), total_dist));
-    }
-
-    println!("encoded {} bytes into lines", i);
-
-    // write the instruction
-    save_string_to_file(out_file_name, instructions);
 }
 
 fn decode(in_file_name: &str, out_file_name: &str) {
